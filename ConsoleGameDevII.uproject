@@ -7,7 +7,16 @@
 		{
 			"Name": "ConsoleGameDevII",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "SteamVR",
+			"Enabled": false
 		}
 	]
 }
