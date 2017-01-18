@@ -62,8 +62,5 @@ Saved/*
 # Compiled source files for the engine to use
 Intermediate/*
 
-#Art Assets
-Content/*
-
 # Cache files for the editor to use
 DerivedDataCache/*
