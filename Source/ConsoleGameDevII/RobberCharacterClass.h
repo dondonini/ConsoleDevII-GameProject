@@ -87,6 +87,7 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	TArray<ABasePickupClass*> GetInventory() { return Inventory; }
 
 	
 	

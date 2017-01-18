@@ -2,6 +2,7 @@
 
 #include "ConsoleGameDevII.h"
 #include "RobberCharacterClass.h"
+#include "RobberCharacterControllerClass.h"
 #include <EngineGlobals.h>
 #include <Runtime/Engine/Classes/Engine/Engine.h>
 
@@ -144,6 +145,16 @@ void ARobberCharacterClass::PickupItem()
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Cant Pick up anymore Items bitch"));
 			//Add noise effects for cant pick up more item
 		}
+	}
+}
+
+void ARobberCharacterClass::HandleInventory()
+{
+	ARobberCharacterControllerClass* controller = Cast<ARobberCharacterControllerClass>(GetController());
+
+	if (controller)
+	{
+		controller->HandleInventoryInput();
 	}
 }
 
