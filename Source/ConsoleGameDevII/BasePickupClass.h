@@ -14,12 +14,20 @@ public:
 	// Sets default values for this actor's properties
 	ABasePickupClass();
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
-	// Called every frame
-	virtual void Tick( float DeltaSeconds ) override;
+	void SetOutline(bool Status);
 
+	FORCEINLINE UTexture2D* GetPickUpTexture() { return PickupTexture; }
 	
-	
+protected:
+	/*The Static Mesh of the pickup*/
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* PickupSM;
+
+	/*The Texture of the item in case we want to add it in the secrets or inventory*/
+	UPROPERTY(EditAnywhere, Category = "PickupProperties")
+	UTexture2D* PickupTexture;
+
+	/*The name of the item*/
+	UPROPERTY(EditAnywhere, Category = "PickupProperties")
+	FString ItemName;
 };

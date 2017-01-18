@@ -2,12 +2,13 @@
 
 #include "ConsoleGameDevII.h"
 #include "RobberCharacterClass.h"
+#include <EngineGlobals.h>
+#include <Runtime/Engine/Classes/Engine/Engine.h>
 
 
 // Sets default values
 ARobberCharacterClass::ARobberCharacterClass()
 {
-
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
@@ -22,12 +23,18 @@ ARobberCharacterClass::ARobberCharacterClass()
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	RaycastRange = 250.0f;
+
+	Inventory.SetNum(MAX_INVENTORY_SLOTS);
 }
 
 // Called when the game starts or when spawned
 void ARobberCharacterClass::BeginPlay()
 {
 	Super::BeginPlay();
+
+	LastSeenItem = nullptr;
 
 }
 
@@ -36,6 +43,7 @@ void ARobberCharacterClass::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RaycastForward();
 }
 
 // Called to bind functionality to input
@@ -53,6 +61,9 @@ void ARobberCharacterClass::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	PlayerInputComponent->BindAxis("TurnRate", this, &ARobberCharacterClass::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ARobberCharacterClass::LookUpAtRate);
+
+	//Pickup
+	PlayerInputComponent->BindAction("Pickup",IE_Pressed, this, &ARobberCharacterClass::PickupItem);
 
 }
 
@@ -84,5 +95,55 @@ void ARobberCharacterClass::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ARobberCharacterClass::RaycastForward()
+{
+	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+	FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * RaycastRange);
+
+	FHitResult RaycastHit;
+
+	//ignores self, shouldnt be a problem because its first person and theres no mesh really
+	FCollisionQueryParams CPQ;
+	CPQ.AddIgnoredActor(this);
+
+	GetWorld()->LineTraceSingleByChannel(RaycastHit, StartLocation, EndLocation, ECollisionChannel::ECC_WorldDynamic, CPQ);
+	//DrawRay
+	ABasePickupClass* Pickup = Cast<ABasePickupClass>(RaycastHit.GetActor());
+
+	if (LastSeenItem && LastSeenItem != Pickup)
+	{
+		LastSeenItem->SetOutline(false);
+	}
+	if (Pickup && Pickup != nullptr)
+	{
+		LastSeenItem = Pickup;
+		Pickup->SetOutline(true);
+	}
+	else
+		Pickup = nullptr;
+}
+
+void ARobberCharacterClass::PickupItem()
+{
+	//so if we are looking at an item 
+	if (LastSeenItem)
+	{
+		int32 AvailableSlots = Inventory.Find(nullptr);
+
+		if (AvailableSlots != INDEX_NONE)
+		{
+			Inventory[AvailableSlots] = LastSeenItem;
+
+			//will change to equipping later on
+			LastSeenItem->Destroy();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Cant Pick up anymore Items bitch"));
+			//Add noise effects for cant pick up more item
+		}
+	}
 }
 
