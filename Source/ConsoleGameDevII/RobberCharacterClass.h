@@ -3,7 +3,10 @@
 #pragma once
 
 #include "GameFramework/Character.h"
+#include "BasePickupClass.h"
 #include "RobberCharacterClass.generated.h"
+
+#define MAX_INVENTORY_SLOTS 3
 
 UCLASS()
 class CONSOLEGAMEDEVII_API ARobberCharacterClass : public ACharacter
@@ -58,6 +61,24 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void RaycastForward();
+
+	ABasePickupClass* LastSeenItem;
+
+	UFUNCTION()
+	void PickupItem();
+
+	UFUNCTION()
+	void HandleInventory();
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<ABasePickupClass*> Inventory;
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	float RaycastRange;
 
 public:
 	/** Returns Mesh1P subobject **/

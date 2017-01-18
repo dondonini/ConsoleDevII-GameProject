@@ -7,22 +7,14 @@
 // Sets default values
 ABasePickupClass::ABasePickupClass()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PickupSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupSM"));
 
+	PickupTexture = CreateDefaultSubobject<UTexture2D>(TEXT("Texture"));
 }
 
-// Called when the game starts or when spawned
-void ABasePickupClass::BeginPlay()
+void ABasePickupClass::SetOutline(bool Status)
 {
-	Super::BeginPlay();
-	
+	PickupSM->SetRenderCustomDepth(Status);
 }
 
-// Called every frame
-void ABasePickupClass::Tick( float DeltaTime )
-{
-	Super::Tick( DeltaTime );
-
-}
 
