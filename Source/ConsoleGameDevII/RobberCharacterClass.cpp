@@ -99,8 +99,7 @@ void ARobberCharacterClass::MoveForward(float Value)
 		GetCharacterMovement()->MaxWalkSpeed = MaxSpeedDefault;
 		AddMovementInput(GetActorForwardVector(), Value);
 
-		GetNetOwningPlayer()->PlayerController->ClientPlayCameraShake(HeadBob, 20.0f /*raise this to 20 for debug*/);
-		
+		GetNetOwningPlayer()->PlayerController->ClientPlayCameraShake(HeadBob, 1.0f /*raise this to 20 for debug*/);
 	}
 }
 
