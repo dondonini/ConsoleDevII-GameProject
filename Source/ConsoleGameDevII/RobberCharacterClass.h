@@ -7,6 +7,7 @@
 #include "RobberCharacterClass.generated.h"
 
 #define MAX_INVENTORY_SLOTS 3
+#define DEFAULT_MAX_SPEED 500
 
 UCLASS()
 class CONSOLEGAMEDEVII_API ARobberCharacterClass : public ACharacter
@@ -16,6 +17,10 @@ class CONSOLEGAMEDEVII_API ARobberCharacterClass : public ACharacter
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FirstPersonCameraComponent;
+
+	UPROPERTY(EditAnywhere, Category = Camera)
+	TSubclassOf<class UCameraShake> HeadBob;
+	//class UCameraShake* FirstPersonCameraShake;
 
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -40,6 +45,10 @@ protected:
 	*/
 	void LookUpAtRate(float Rate);
 
+	void OnStartSprint();
+	void OnStopSprint();
+
+	void ToggleCrouch();
 
 public:
 	// Sets default values for this character's properties
@@ -80,6 +89,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float RaycastRange;
 
+	/* Player Movement */
+	UPROPERTY(EditDefaultsOnly, Category = Player)
+	float MaxSpeedDefault;
+
+	UPROPERTY(EditDefaultsOnly, Category = Player)
+	float SprintSpeedModifier;
+
+	UPROPERTY(EditDefaultsOnly, Category = Player)
+	float CrouchSpeedModifier;
+
+
 public:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -89,6 +109,5 @@ public:
 
 	TArray<ABasePickupClass*> GetInventory() { return Inventory; }
 
-	
-	
+
 };
