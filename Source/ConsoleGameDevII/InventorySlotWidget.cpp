@@ -15,4 +15,9 @@ void UInventorySlotWidget::SetItemTexture(ABasePickupClass* Item)
 	(Item) ? ItemTexture = Item->GetPickUpTexture() : ItemTexture = nullptr;
 }
 
+void UInventorySlotWidget::SetItemName(ABasePickupClass* Item)
+{
+	(Item) ? ItemName = Item->ItemName : ItemName = NULL;
+}
+
 

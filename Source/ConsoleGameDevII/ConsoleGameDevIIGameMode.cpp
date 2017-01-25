@@ -9,10 +9,13 @@
 AConsoleGameDevIIGameMode::AConsoleGameDevIIGameMode()
 	: Super()
 {
-	// set default pawn class to our Blueprinted character
+
 	static ConstructorHelpers::FClassFinder<APawn>
 	PlayerPawnClassFinder(TEXT("/Game/Blueprint/Player/RobberCharacter_BP"));
-	DefaultPawnClass = PlayerPawnClassFinder.Class;
+	if (PlayerPawnClassFinder.Class != NULL)
+	{
+		DefaultPawnClass = PlayerPawnClassFinder.Class;
+	}
 
 	PlayerControllerClass = ARobberCharacterControllerClass::StaticClass();
 

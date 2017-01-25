@@ -19,14 +19,23 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UTexture2D* ItemTexture;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FString ItemName;
+
+
 	/*Tells the player the equip the represented item from this widget*/
 	UFUNCTION(BlueprintCallable, Category = UI)
 	void SetEquippedItem();
+
+
 
 public:
 	/*Sets the item texture*/
 	UFUNCTION(BlueprintCallable, Category = UI)
 	void SetItemTexture(ABasePickupClass* Item);
+
+	UFUNCTION(BlueprintCallable, Category = UI)
+	void SetItemName(ABasePickupClass* Item);
 	
 	
 	

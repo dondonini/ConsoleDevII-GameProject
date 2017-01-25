@@ -16,6 +16,8 @@ class CONSOLEGAMEDEVII_API ARobberCharacterControllerClass : public APlayerContr
 
 	ARobberCharacterControllerClass();
 
+	virtual void BeginPlay() override;
+
 private:
 	/*InventoryWidget reference*/
 	UInventoryWidget* InventoryWidgetRef;
@@ -32,6 +34,8 @@ protected:
 public:
 	virtual void Possess(APawn* InPawn) override;
 	void HandleInventoryInput();
+
+
 	
 	
 };

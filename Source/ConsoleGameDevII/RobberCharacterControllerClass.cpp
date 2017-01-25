@@ -9,6 +9,19 @@ ARobberCharacterControllerClass::ARobberCharacterControllerClass()
 
 }
 
+void ARobberCharacterControllerClass::BeginPlay()
+{
+	Super::BeginPlay();
+	 
+}
+
+void ARobberCharacterControllerClass::HandleInventoryInput()
+{
+	ARobberCharacterClass* Char = Cast<ARobberCharacterClass>(GetPawn());
+	InventoryWidgetRef->ItemsArray = Char->GetInventory();
+	InventoryWidgetRef->Show();
+}
+
 void ARobberCharacterControllerClass::Possess(APawn* InPawn)
 {
 	Super::Possess(InPawn);
@@ -16,38 +29,18 @@ void ARobberCharacterControllerClass::Possess(APawn* InPawn)
 	if (InventoryWidgetBP)
 	{
 		InventoryWidgetRef = CreateWidget<UInventoryWidget>(this, InventoryWidgetBP);
+
+		InventoryWidgetRef->Show();
+
+		ARobberCharacterClass* Char = Cast<ARobberCharacterClass>(GetPawn());
+
+		InventoryWidgetRef->ItemsArray = Char->GetInventory();
 	}
 
-	bIsInventoryOpen = false;
 }
 
-void ARobberCharacterControllerClass::HandleInventoryInput()
-{
-	ARobberCharacterClass* Char = Cast<ARobberCharacterClass>(GetPawn());
-	if (InventoryWidgetRef)
-	{
-		if (bIsInventoryOpen)
-		{
-			//Mark the inventory as closed
-			bIsInventoryOpen = false;
 
-			//Remove it from the viewport
-			InventoryWidgetRef->RemoveFromViewport();
-		}
-		else
-		{
-			//Mark the inventory as open
-			bIsInventoryOpen = true;
 
-			//Re-populate the ItemsArray
-			InventoryWidgetRef->ItemsArray = Char->GetInventory();
-
-			//Show the inventory
-			InventoryWidgetRef->Show();
-		}
-
-	}
-}
 
 
 

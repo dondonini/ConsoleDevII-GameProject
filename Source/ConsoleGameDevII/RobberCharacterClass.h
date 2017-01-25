@@ -67,18 +67,23 @@ private:
 
 	ABasePickupClass* LastSeenItem;
 
-	UFUNCTION()
-	void PickupItem();
+	ABasePickupClass* EquippedItem;
 
 	UFUNCTION()
-	void HandleInventory();
+	void PickupItem();
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<ABasePickupClass*> Inventory;
 
+	UPROPERTY(EditAnywhere)
+	FVector EquipmentVectorOffset;
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	float RaycastRange;
+
+public:
+	void SetEquippedItem(UTexture2D* Texture);
 
 public:
 	/** Returns Mesh1P subobject **/

@@ -28,6 +28,8 @@ ARobberCharacterClass::ARobberCharacterClass()
 	RaycastRange = 250.0f;
 
 	Inventory.SetNum(MAX_INVENTORY_SLOTS);
+
+	EquippedItem = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -36,6 +38,13 @@ void ARobberCharacterClass::BeginPlay()
 	Super::BeginPlay();
 
 	LastSeenItem = nullptr;
+
+	ARobberCharacterControllerClass* controller = Cast<ARobberCharacterControllerClass>(GetController());
+	if (controller)
+	{
+		controller->Possess(this);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Possessing"));
+	}
 
 }
 
@@ -65,7 +74,6 @@ void ARobberCharacterClass::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 	//Pickup
 	PlayerInputComponent->BindAction("Pickup",IE_Pressed, this, &ARobberCharacterClass::PickupItem);
-
 }
 
 void ARobberCharacterClass::MoveForward(float Value)
@@ -137,8 +145,34 @@ void ARobberCharacterClass::PickupItem()
 		{
 			Inventory[AvailableSlots] = LastSeenItem;
 
-			//will change to equipping later on
-			LastSeenItem->Destroy();
+			FString currentitemname = Inventory[AvailableSlots]->GetName();
+
+			ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+			if (MyController)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, currentitemname);
+				MyController->HandleInventoryInput();
+			}
+
+			if (EquippedItem == nullptr)
+			{
+				FVector EquippedVector = (FirstPersonCameraComponent->GetComponentLocation() + EquipmentVectorOffset);
+				EquippedItem = Inventory[AvailableSlots];
+
+				FVector SocketLocationR;
+				SocketLocationR = GetMesh()->GetSocketLocation("GripPoint");
+				EquippedItem->AttachRootComponentTo(GetMesh(), FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
+				EquippedItem->SetActorEnableCollision(false);
+			}
+
+			else
+			{
+				EquippedItem->SetActorLocation(FirstPersonCameraComponent->GetComponentLocation());
+				Inventory[AvailableSlots]->SetActorHiddenInGame(true);
+			}
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,EquippedItem->GetName());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, FString::FromInt(AvailableSlots));
 		}
 		else
 		{
@@ -146,15 +180,16 @@ void ARobberCharacterClass::PickupItem()
 			//Add noise effects for cant pick up more item
 		}
 	}
+
+	
 }
 
-void ARobberCharacterClass::HandleInventory()
+void ARobberCharacterClass::SetEquippedItem(UTexture2D* Texture)
 {
-	ARobberCharacterControllerClass* controller = Cast<ARobberCharacterControllerClass>(GetController());
-
-	if (controller)
+	if (Texture)
 	{
-		controller->HandleInventoryInput();
+
 	}
 }
+
 

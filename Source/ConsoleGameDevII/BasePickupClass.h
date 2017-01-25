@@ -17,6 +17,10 @@ public:
 	void SetOutline(bool Status);
 
 	FORCEINLINE UTexture2D* GetPickUpTexture() { return PickupTexture; }
+
+	/*The name of the item*/
+	UPROPERTY(EditAnywhere, Category = "PickupProperties")
+	FString ItemName;
 	
 protected:
 	/*The Static Mesh of the pickup*/
@@ -27,7 +31,4 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "PickupProperties")
 	UTexture2D* PickupTexture;
 
-	/*The name of the item*/
-	UPROPERTY(EditAnywhere, Category = "PickupProperties")
-	FString ItemName;
 };
