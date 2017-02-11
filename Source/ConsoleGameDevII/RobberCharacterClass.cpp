@@ -30,6 +30,8 @@ ARobberCharacterClass::ARobberCharacterClass()
 	Inventory.SetNum(MAX_INVENTORY_SLOTS);
 
 	EquippedItem = nullptr;
+
+	currentInventoryIndex = 0;
 }
 
 // Called when the game starts or when spawned
@@ -74,6 +76,7 @@ void ARobberCharacterClass::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 	//Pickup
 	PlayerInputComponent->BindAction("Pickup",IE_Pressed, this, &ARobberCharacterClass::PickupItem);
+	PlayerInputComponent->BindAction("Inventory", IE_Pressed, this, &ARobberCharacterClass::NextItem);
 }
 
 void ARobberCharacterClass::MoveForward(float Value)
@@ -123,21 +126,24 @@ void ARobberCharacterClass::RaycastForward()
 
 	if (LastSeenItem && LastSeenItem != Pickup)
 	{
+		//If our character sees a different pickup then disable the glowing effect on the previous seen item
 		LastSeenItem->SetOutline(false);
 	}
-	if (Pickup && Pickup != nullptr)
+
+	if (Pickup)
 	{
+		//Enable the glow effect on the current item
 		LastSeenItem = Pickup;
 		Pickup->SetOutline(true);
-	}
-	else
-		Pickup = nullptr;
+	}//Re-Initialize 
+	else 
+		LastSeenItem = nullptr;
 }
 
 void ARobberCharacterClass::PickupItem()
 {
 	//so if we are looking at an item 
-	if (LastSeenItem)
+	if (LastSeenItem && EquippedItem != LastSeenItem)
 	{
 		int32 AvailableSlots = Inventory.Find(nullptr);
 
@@ -145,15 +151,13 @@ void ARobberCharacterClass::PickupItem()
 		{
 			Inventory[AvailableSlots] = LastSeenItem;
 
-			FString currentitemname = Inventory[AvailableSlots]->GetName();
-
 			ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
 			if (MyController)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, currentitemname);
 				MyController->HandleInventoryInput();
 			}
 
+			//is this our first item?
 			if (EquippedItem == nullptr)
 			{
 				FVector EquippedVector = (FirstPersonCameraComponent->GetComponentLocation() + EquipmentVectorOffset);
@@ -163,14 +167,21 @@ void ARobberCharacterClass::PickupItem()
 				SocketLocationR = GetMesh()->GetSocketLocation("GripPoint");
 				EquippedItem->AttachRootComponentTo(GetMesh(), FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
 				EquippedItem->SetActorEnableCollision(false);
+				currentInventoryIndex = 0;
 			}
 
 			else
 			{
-				EquippedItem->SetActorLocation(FirstPersonCameraComponent->GetComponentLocation());
+				FVector SocketLocationR;
+				SocketLocationR = GetMesh()->GetSocketLocation("GripPoint");
+				Inventory[AvailableSlots]->AttachRootComponentTo(GetMesh(), FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
+				Inventory[AvailableSlots]->SetActorEnableCollision(false);
 				Inventory[AvailableSlots]->SetActorHiddenInGame(true);
+				//EquippedItem->SetActorLocation(FirstPersonCameraComponent->GetComponentLocation());
+				//Inventory[AvailableSlots]->SetActorHiddenInGame(true);
 			}
 
+			//Debugging
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,EquippedItem->GetName());
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, FString::FromInt(AvailableSlots));
 		}
@@ -182,6 +193,17 @@ void ARobberCharacterClass::PickupItem()
 	}
 
 	
+}
+
+void ARobberCharacterClass::NextItem()
+{
+	Inventory[currentInventoryIndex]->SetActorHiddenInGame(true);
+	currentInventoryIndex++;
+	if (Inventory[currentInventoryIndex])
+	{
+		EquippedItem = Inventory[currentInventoryIndex];
+		EquippedItem->SetActorHiddenInGame(false);
+	}
 }
 
 void ARobberCharacterClass::SetEquippedItem(UTexture2D* Texture)

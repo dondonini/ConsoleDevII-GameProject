@@ -78,9 +78,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	FVector EquipmentVectorOffset;
 
+	void NextItem();
+	int32 currentInventoryIndex;
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	float RaycastRange;
+
 
 public:
 	void SetEquippedItem(UTexture2D* Texture);

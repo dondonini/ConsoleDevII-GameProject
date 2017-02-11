@@ -22,12 +22,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString ItemName;
 
-
 	/*Tells the player the equip the represented item from this widget*/
 	UFUNCTION(BlueprintCallable, Category = UI)
 	void SetEquippedItem();
-
-
 
 public:
 	/*Sets the item texture*/
