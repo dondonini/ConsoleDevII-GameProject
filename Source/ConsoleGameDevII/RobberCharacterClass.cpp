@@ -19,11 +19,29 @@ ARobberCharacterClass::ARobberCharacterClass()
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
+	MaxSpeedDefault = 500.f;
+	SprintSpeedModifier = 1.5f;
+
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	/*
+	// Camera Shake
+	FirstPersonCameraShake = UCameraShake::StaticClass()->GetDefaultObject<UCameraShake>();
+	FirstPersonCameraShake->OscillationDuration = -1.0f; //negative value will run forever
+	FirstPersonCameraShake->RotOscillation.Pitch.Amplitude = 1.0f;
+	FirstPersonCameraShake->RotOscillation.Pitch.Frequency = 0.5f;
+	FirstPersonCameraShake->RotOscillation.Pitch.InitialOffset = EInitialOscillatorOffset::EOO_OffsetRandom;
+
+	FirstPersonCameraShake->RotOscillation.Yaw.Amplitude = 1.0f;
+	FirstPersonCameraShake->RotOscillation.Yaw.Frequency = 0.5f;
+	FirstPersonCameraShake->RotOscillation.Yaw.InitialOffset = EInitialOscillatorOffset::EOO_OffsetRandom;
+	*/
 
 	RaycastRange = 250.0f;
 
@@ -71,9 +89,12 @@ void ARobberCharacterClass::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	PlayerInputComponent->BindAxis("TurnRate", this, &ARobberCharacterClass::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ARobberCharacterClass::LookUpAtRate);
-
-	//Pickup
-	PlayerInputComponent->BindAction("Pickup",IE_Pressed, this, &ARobberCharacterClass::PickupItem);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARobberCharacterClass::OnStartSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARobberCharacterClass::OnStopSprint);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ARobberCharacterClass::ToggleCrouch);
+	
+//Pickup
+	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &ARobberCharacterClass::PickupItem);
 }
 
 void ARobberCharacterClass::MoveForward(float Value)
@@ -81,7 +102,10 @@ void ARobberCharacterClass::MoveForward(float Value)
 	if (Value != 0.0f)
 	{
 		// add movement in that direction
+		GetCharacterMovement()->MaxWalkSpeed = MaxSpeedDefault;
 		AddMovementInput(GetActorForwardVector(), Value);
+
+		GetNetOwningPlayer()->PlayerController->ClientPlayCameraShake(HeadBob, 1.0f /*raise this to 20 for debug*/);
 	}
 }
 
@@ -90,6 +114,7 @@ void ARobberCharacterClass::MoveRight(float Value)
 	if (Value != 0.0f)
 	{
 		// add movement in that direction
+		GetCharacterMovement()->MaxWalkSpeed = MaxSpeedDefault;
 		AddMovementInput(GetActorRightVector(), Value);
 	}
 }
@@ -104,6 +129,28 @@ void ARobberCharacterClass::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ARobberCharacterClass::OnStartSprint()
+{
+	MaxSpeedDefault = MaxSpeedDefault * SprintSpeedModifier;
+}
+
+void ARobberCharacterClass::OnStopSprint()
+{
+	MaxSpeedDefault = DEFAULT_MAX_SPEED;
+}
+
+void ARobberCharacterClass::ToggleCrouch()
+{
+	if (CanCrouch())
+	{
+		Crouch();
+	}
+	else
+	{
+		UnCrouch();
+	}
 }
 
 void ARobberCharacterClass::RaycastForward()
