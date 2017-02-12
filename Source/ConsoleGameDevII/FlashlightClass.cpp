@@ -3,6 +3,7 @@
 #include "ConsoleGameDevII.h"
 #include "FlashlightClass.h"
 
-
-
-
+bool AFlashlightClass::GetStatus()
+{
+	return bIsActive;
+}

@@ -3,6 +3,9 @@
 #include "ConsoleGameDevII.h"
 #include "RobberCharacterClass.h"
 #include "RobberCharacterControllerClass.h"
+#include "FlashlightClass.h"
+#include "BinocularsClass.h"
+#include "LockpickClass.h"
 #include <EngineGlobals.h>
 #include <Runtime/Engine/Classes/Engine/Engine.h>
 
@@ -24,11 +27,18 @@ ARobberCharacterClass::ARobberCharacterClass()
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
+	//Cameraboom
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(GetCapsuleComponent());
+	CameraBoom->SocketOffset = SpringArmOffset;
+	CameraBoom->TargetArmLength = SpringArmLength;
+	CameraBoom->bUsePawnControlRotation = false;
+
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	FirstPersonCameraComponent->SetupAttachment(CameraBoom);
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+	FirstPersonCameraComponent->bUsePawnControlRotation = false;
 
 	/*
 	// Camera Shake
@@ -42,6 +52,10 @@ ARobberCharacterClass::ARobberCharacterClass()
 	FirstPersonCameraShake->RotOscillation.Yaw.Frequency = 0.5f;
 	FirstPersonCameraShake->RotOscillation.Yaw.InitialOffset = EInitialOscillatorOffset::EOO_OffsetRandom;
 	*/
+
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh1P"));
+	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
+
 
 	RaycastRange = 250.0f;
 
@@ -74,6 +88,28 @@ void ARobberCharacterClass::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	RaycastForward();
+	RaycastItem();
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+
+
+	if (MyController->bIsBinocularsOpen)
+	{
+		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, -500.0f))
+		{
+			CameraBoom->TargetArmLength = (FMath::FInterpTo(CameraBoom->TargetArmLength, -500.0f, DeltaTime, 25.f));
+			Mesh1P->AttachTo(RootComponent);
+		}
+	}
+
+	if (!MyController->bIsBinocularsOpen)
+	{
+		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, 0.0f))
+		{
+			CameraBoom->TargetArmLength = (FMath::FInterpTo(CameraBoom->TargetArmLength, 0.0f, DeltaTime, 25.f));
+			Mesh1P->AttachTo(FirstPersonCameraComponent);
+		}
+	}
+
 }
 
 // Called to bind functionality to input
@@ -91,19 +127,18 @@ void ARobberCharacterClass::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	PlayerInputComponent->BindAxis("TurnRate", this, &ARobberCharacterClass::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ARobberCharacterClass::LookUpAtRate);
-<<<<<<< HEAD
 
 	//Pickup
 	PlayerInputComponent->BindAction("Pickup",IE_Pressed, this, &ARobberCharacterClass::PickupItem);
 	PlayerInputComponent->BindAction("Inventory", IE_Pressed, this, &ARobberCharacterClass::NextItem);
-=======
+
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARobberCharacterClass::OnStartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARobberCharacterClass::OnStopSprint);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ARobberCharacterClass::ToggleCrouch);
 	
 //Pickup
-	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &ARobberCharacterClass::PickupItem);
->>>>>>> b1744218c1cddc433fdea727df82408d2306deaa
+	PlayerInputComponent->BindAction("ItemToggle", IE_Pressed, this, &ARobberCharacterClass::ToggleItemFunctions);
+
 }
 
 void ARobberCharacterClass::MoveForward(float Value)
@@ -162,6 +197,32 @@ void ARobberCharacterClass::ToggleCrouch()
 	}
 }
 
+/*Toggle Tooltip UI*/
+void ARobberCharacterClass::RaycastItem()
+{
+	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+	FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * RaycastRange);
+
+	FHitResult RaycastHit;
+
+	//ignores self, shouldnt be a problem because its first person and theres no mesh really
+	FCollisionQueryParams CPQ;
+	CPQ.AddIgnoredActor(this);
+
+	GetWorld()->LineTraceSingleByChannel(RaycastHit, StartLocation, EndLocation, ECollisionChannel::ECC_WorldDynamic, CPQ);
+	//DrawRay
+	ABasePickupClass* Item = Cast<ABasePickupClass>(RaycastHit.GetActor());
+
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+
+	if (Item)
+	{
+		MyController->ToggleTooltipUIOn();
+	}
+	else
+		MyController->ToggleTooltipUIOff();
+}
+
 void ARobberCharacterClass::RaycastForward()
 {
 	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
@@ -177,6 +238,10 @@ void ARobberCharacterClass::RaycastForward()
 	//DrawRay
 	ABasePickupClass* Pickup = Cast<ABasePickupClass>(RaycastHit.GetActor());
 
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+
+	bool bShowing = false;
+
 	if (LastSeenItem && LastSeenItem != Pickup)
 	{
 		//If our character sees a different pickup then disable the glowing effect on the previous seen item
@@ -188,7 +253,14 @@ void ARobberCharacterClass::RaycastForward()
 		//Enable the glow effect on the current item
 		LastSeenItem = Pickup;
 		Pickup->SetOutline(true);
+		if (MyController)
+		{
+			MyController->SetNameOfWidget(Pickup->ItemName);
+			MyController->SetDescriptionOfWidget(Pickup->DescriptionText);
+		}
+
 	}//Re-Initialize 
+
 	else 
 		LastSeenItem = nullptr;
 }
@@ -217,26 +289,31 @@ void ARobberCharacterClass::PickupItem()
 				EquippedItem = Inventory[AvailableSlots];
 
 				FVector SocketLocationR;
-				SocketLocationR = GetMesh()->GetSocketLocation("GripPoint");
-				EquippedItem->AttachRootComponentTo(GetMesh(), FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
+				SocketLocationR = Mesh1P->GetSocketLocation("GripPoint");
+				EquippedItem->AttachRootComponentTo(Mesh1P, FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
 				EquippedItem->SetActorEnableCollision(false);
 				currentInventoryIndex = 0;
+
+				MyController->SetNameOfInventoryWidget(EquippedItem->ItemName);
+
+				if (EquippedItem->ItemName == "Flashlight")
+				{
+					AFlashlightClass* aaaa = Cast<AFlashlightClass>(EquippedItem);
+					if (aaaa)
+					{
+						aaaa->bIsActive = true;
+					}
+				}
 			}
 
 			else
 			{
 				FVector SocketLocationR;
-				SocketLocationR = GetMesh()->GetSocketLocation("GripPoint");
-				Inventory[AvailableSlots]->AttachRootComponentTo(GetMesh(), FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
+				SocketLocationR = Mesh1P->GetSocketLocation("GripPoint");
+				Inventory[AvailableSlots]->AttachRootComponentTo(Mesh1P, FName(TEXT("GripPoint")), EAttachLocation::SnapToTarget);
 				Inventory[AvailableSlots]->SetActorEnableCollision(false);
 				Inventory[AvailableSlots]->SetActorHiddenInGame(true);
-				//EquippedItem->SetActorLocation(FirstPersonCameraComponent->GetComponentLocation());
-				//Inventory[AvailableSlots]->SetActorHiddenInGame(true);
 			}
-
-			//Debugging
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White,EquippedItem->GetName());
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, FString::FromInt(AvailableSlots));
 		}
 		else
 		{
@@ -244,25 +321,81 @@ void ARobberCharacterClass::PickupItem()
 			//Add noise effects for cant pick up more item
 		}
 	}
-
-	
 }
 
 void ARobberCharacterClass::NextItem()
 {
+	FString a = "Flashlight";
+	//add exception
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
 	Inventory[currentInventoryIndex]->SetActorHiddenInGame(true);
-	currentInventoryIndex++;
+	if (currentInventoryIndex == 1)
+	{
+		if (Inventory[0] != nullptr)
+			currentInventoryIndex = 0;
+	}
+	else if (Inventory[1] != nullptr)
+		currentInventoryIndex++;
+
 	if (Inventory[currentInventoryIndex])
 	{
 		EquippedItem = Inventory[currentInventoryIndex];
+		MyController->SetNameOfInventoryWidget(EquippedItem->ItemName);
 		EquippedItem->SetActorHiddenInGame(false);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, EquippedItem->GetName() + TEXT("Blah"));
+	}
+
+	/*really hot fix.. there has to be a better way but lazy. jeff help*/
+	if (Inventory[currentInventoryIndex]->ItemName == a)
+	{
+		AFlashlightClass* flashlight = Cast<AFlashlightClass>(EquippedItem);
+		if (flashlight)
+		{
+			flashlight->bIsActive = true;
+		}
+	}
+	else
+	{
+		for (TActorIterator<AFlashlightClass> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+		{
+			// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+			AFlashlightClass *Mesh = *ActorItr;
+			ActorItr->bIsActive = false;
+		}
+	}
+	//Saftey check to ensure the black bincoular view is turned off if its already open
+	if (MyController->bIsBinocularsOpen)
+	{
+		MyController->ToggleBinocularsWidgetOn();
 	}
 }
 
-void ARobberCharacterClass::SetEquippedItem(UTexture2D* Texture)
+void ARobberCharacterClass::ToggleItemFunctions()
 {
-	if (Texture)
+	AFlashlightClass* flashlight = Cast<AFlashlightClass>(EquippedItem);
+	ABinocularsClass* binoculars = Cast<ABinocularsClass>(EquippedItem);
+	ALockpickClass* lockpick = Cast<ALockpickClass>(EquippedItem);
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+
+	if (EquippedItem == flashlight)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("flashlight"));
+		if (flashlight)
+		{
+			if (flashlight->bIsActive == true)
+			{
+				flashlight->bIsActive = false;
+			}
+			else
+				flashlight->bIsActive = true;
+		}
+	}
+	if (EquippedItem == binoculars)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Binoculars"));
+
+		MyController->ToggleBinocularsWidgetOn();
+
 
 	}
 }

@@ -26,6 +26,14 @@ public:
 	/*Stores a reference in order to bind information on inventory slots*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<ABasePickupClass*> ItemsArray;
+
+	UFUNCTION(BlueprintCallable, Category = UI)
+		void SetItemsName(FString a);
+
+	UFUNCTION(BlueprintCallable, Category = UI)
+		FText GetItemName() const;
+
+	FText ItemsName;
 	
 	
 	

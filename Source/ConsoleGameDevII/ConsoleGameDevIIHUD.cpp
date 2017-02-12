@@ -4,6 +4,8 @@
 #include "ConsoleGameDevIIHUD.h"
 #include "Engine/Canvas.h"
 #include "TextureResource.h"
+#include "RobberCharacterClass.h"
+#include "RobberCharacterControllerClass.h"
 #include "CanvasItem.h"
 
 AConsoleGameDevIIHUD::AConsoleGameDevIIHUD()
@@ -13,6 +15,20 @@ AConsoleGameDevIIHUD::AConsoleGameDevIIHUD()
 	CrosshairTex = CrosshiarTexObj.Object;
 }
 
+void AConsoleGameDevIIHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (TooltipWidgetClass)
+	{
+		ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetOwner());
+		TooltipWidget = CreateWidget<UTootlipWidgetClass>(MyController, TooltipWidgetClass);
+		TooltipWidget->AddToViewport();
+		TooltipWidget->SetVisibility(ESlateVisibility::Visible);
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("Created Tooltip Widget"));
+	}
+}
 
 void AConsoleGameDevIIHUD::DrawHUD()
 {
@@ -32,4 +48,6 @@ void AConsoleGameDevIIHUD::DrawHUD()
 	TileItem.BlendMode = SE_BLEND_Translucent;
 	Canvas->DrawItem( TileItem );
 }
+
+
 

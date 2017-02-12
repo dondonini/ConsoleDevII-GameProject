@@ -33,7 +33,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = UI)
 	void SetItemName(ABasePickupClass* Item);
+
+	UFUNCTION(BlueprintCallable, Category = UI)
+	void SetItemsName(FString a);
 	
+	UFUNCTION(BlueprintCallable, Category = UI)
+	FText GetItemName() const;
+
+	FText ItemsName;
 	
 	
 };

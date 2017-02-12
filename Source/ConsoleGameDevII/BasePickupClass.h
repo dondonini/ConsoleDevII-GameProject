@@ -21,6 +21,9 @@ public:
 	/*The name of the item*/
 	UPROPERTY(EditAnywhere, Category = "PickupProperties")
 	FString ItemName;
+
+	UPROPERTY(EditAnywhere, Category = "PickupProperties")
+	FString DescriptionText;
 	
 protected:
 	/*The Static Mesh of the pickup*/

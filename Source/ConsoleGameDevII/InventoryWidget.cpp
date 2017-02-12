@@ -4,5 +4,14 @@
 #include "InventoryWidget.h"
 
 
+void UInventoryWidget::SetItemsName(FString a)
+{
+	ItemsName = FText::FromString(a);
+}
+
+FText UInventoryWidget::GetItemName() const
+{
+	return ItemsName;
+}
 
 

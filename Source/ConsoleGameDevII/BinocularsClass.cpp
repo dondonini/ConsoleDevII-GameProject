@@ -3,6 +3,9 @@
 #include "ConsoleGameDevII.h"
 #include "BinocularsClass.h"
 
-
+bool ABinocularsClass::GetStatus()
+{
+	return bIsActive;
+}
 
 

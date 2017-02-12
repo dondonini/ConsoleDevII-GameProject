@@ -13,7 +13,12 @@ class CONSOLEGAMEDEVII_API AFlashlightClass : public ABasePickupClass
 {
 	GENERATED_BODY()
 	
-	
+public:
+	UPROPERTY(EditAnywhere)
+	bool bIsActive = false;
+
+	UFUNCTION(BlueprintCallable, Category = Info)
+	bool GetStatus();
 	
 	
 };

@@ -6,7 +6,7 @@
 #include "BasePickupClass.h"
 #include "RobberCharacterClass.generated.h"
 
-#define MAX_INVENTORY_SLOTS 3
+#define MAX_INVENTORY_SLOTS 2
 #define DEFAULT_MAX_SPEED 500
 
 UCLASS()
@@ -25,6 +25,9 @@ class CONSOLEGAMEDEVII_API ARobberCharacterClass : public ACharacter
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	class USkeletalMeshComponent* Mesh1P;
+
+	UPROPERTY(EditAnywhere, Category = Camera)
+	class USpringArmComponent* CameraBoom;
 
 protected:
 	/** Handles moving forward/backward */
@@ -74,9 +77,12 @@ public:
 private:
 	void RaycastForward();
 
-	ABasePickupClass* LastSeenItem;
+	void RaycastItem();
 
+	ABasePickupClass* LastSeenItem;
+public:
 	ABasePickupClass* EquippedItem;
+private:
 
 	UFUNCTION()
 	void PickupItem();
@@ -88,14 +94,15 @@ private:
 	FVector EquipmentVectorOffset;
 
 	void NextItem();
+
 	int32 currentInventoryIndex;
+
+	void ToggleItemFunctions();
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	float RaycastRange;
 
-<<<<<<< HEAD
-=======
 	/* Player Movement */
 	UPROPERTY(EditDefaultsOnly, Category = Player)
 	float MaxSpeedDefault;
@@ -106,10 +113,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Player)
 	float CrouchSpeedModifier;
 
->>>>>>> b1744218c1cddc433fdea727df82408d2306deaa
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	FVector SpringArmOffset;
 
-public:
-	void SetEquippedItem(UTexture2D* Texture);
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	float SpringArmLength;
 
 public:
 	/** Returns Mesh1P subobject **/
@@ -119,6 +127,10 @@ public:
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	TArray<ABasePickupClass*> GetInventory() { return Inventory; }
+
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+
 
 
 };

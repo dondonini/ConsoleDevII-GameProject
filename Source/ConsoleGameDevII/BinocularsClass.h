@@ -12,8 +12,10 @@ UCLASS()
 class CONSOLEGAMEDEVII_API ABinocularsClass : public ABasePickupClass
 {
 	GENERATED_BODY()
-	
-	
+public:
+	bool bIsActive = false;
+
+	bool GetStatus();
 	
 	
 };
