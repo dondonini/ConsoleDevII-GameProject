@@ -6,6 +6,7 @@
 #include "FlashlightClass.h"
 #include "BinocularsClass.h"
 #include "LockpickClass.h"
+#include "EnemyAI.h"
 #include <EngineGlobals.h>
 #include <Runtime/Engine/Classes/Engine/Engine.h>
 
@@ -64,7 +65,10 @@ ARobberCharacterClass::ARobberCharacterClass()
 	EquippedItem = nullptr;
 
 	currentInventoryIndex = 0;
+
+	EnemyTimer = 3.0f;
 }
+
 
 // Called when the game starts or when spawned
 void ARobberCharacterClass::BeginPlay()
@@ -92,11 +96,12 @@ void ARobberCharacterClass::Tick(float DeltaTime)
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
 
 
-	if (MyController->bIsBinocularsOpen)
+	if (MyController->bIsBinocularsOpen && !bManualZoom)
 	{
-		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, -500.0f))
+		BinocularsRaycast(DeltaTime);
+		if (!FMath::IsNearlyEqual(CameraBoom->TargetArmLength, -1000.0f))
 		{
-			CameraBoom->TargetArmLength = (FMath::FInterpTo(CameraBoom->TargetArmLength, -500.0f, DeltaTime, 25.f));
+			CameraBoom->TargetArmLength = (FMath::FInterpTo(CameraBoom->TargetArmLength, -1000.0f, DeltaTime, 25.f));
 			Mesh1P->AttachTo(RootComponent);
 		}
 	}
@@ -109,7 +114,6 @@ void ARobberCharacterClass::Tick(float DeltaTime)
 			Mesh1P->AttachTo(FirstPersonCameraComponent);
 		}
 	}
-
 }
 
 // Called to bind functionality to input
@@ -131,13 +135,15 @@ void ARobberCharacterClass::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	//Pickup
 	PlayerInputComponent->BindAction("Pickup",IE_Pressed, this, &ARobberCharacterClass::PickupItem);
 	PlayerInputComponent->BindAction("Inventory", IE_Pressed, this, &ARobberCharacterClass::NextItem);
+	PlayerInputComponent->BindAction("ItemToggle", IE_Pressed, this, &ARobberCharacterClass::ToggleItemFunctions);
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARobberCharacterClass::OnStartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARobberCharacterClass::OnStopSprint);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ARobberCharacterClass::ToggleCrouch);
-	
-//Pickup
-	PlayerInputComponent->BindAction("ItemToggle", IE_Pressed, this, &ARobberCharacterClass::ToggleItemFunctions);
+
+	//Binoculars Zoom
+	PlayerInputComponent->BindAction("ZoomIn", IE_Pressed, this, &ARobberCharacterClass::BinocularsZoomIn);
+	PlayerInputComponent->BindAction("ZoomOut", IE_Pressed, this, &ARobberCharacterClass::BinocularsZoomOut);
 
 }
 
@@ -326,6 +332,7 @@ void ARobberCharacterClass::PickupItem()
 void ARobberCharacterClass::NextItem()
 {
 	FString a = "Flashlight";
+	bManualZoom = false;
 	//add exception
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
 	Inventory[currentInventoryIndex]->SetActorHiddenInGame(true);
@@ -376,27 +383,109 @@ void ARobberCharacterClass::ToggleItemFunctions()
 	ABinocularsClass* binoculars = Cast<ABinocularsClass>(EquippedItem);
 	ALockpickClass* lockpick = Cast<ALockpickClass>(EquippedItem);
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
-
-	if (EquippedItem == flashlight)
+	if (EquippedItem != nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("flashlight"));
-		if (flashlight)
+		if (EquippedItem == flashlight)
 		{
-			if (flashlight->bIsActive == true)
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("flashlight"));
+			if (flashlight)
 			{
-				flashlight->bIsActive = false;
+				if (flashlight->bIsActive == true)
+				{
+					flashlight->bIsActive = false;
+				}
+				else
+					flashlight->bIsActive = true;
+			}
+		}
+		if (EquippedItem == binoculars)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Binoculars"));
+
+			MyController->ToggleBinocularsWidgetOn();
+			if (MyController->bIsBinocularsOpen)
+			{
+				EquippedItem->SetActorHiddenInGame(true);
 			}
 			else
-				flashlight->bIsActive = true;
+				EquippedItem->SetActorHiddenInGame(false);
 		}
 	}
-	if (EquippedItem == binoculars)
+}
+
+void ARobberCharacterClass::BinocularsRaycast(float deltaseconds)
+{
+	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+	FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * BinocularsRaycastRange);
+
+	FHitResult RaycastHit;
+
+	FCollisionQueryParams CPQ;
+	CPQ.AddIgnoredActor(this);
+
+	GetWorld()->LineTraceSingleByChannel(RaycastHit, StartLocation, EndLocation, ECollisionChannel::ECC_WorldDynamic, CPQ);
+	//DrawRay
+	AEnemyAI* enemy = Cast<AEnemyAI>(RaycastHit.GetActor());
+
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+
+	//float timer = 3.0f;
+	if (LastSeenEnemy && LastSeenEnemy != enemy)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Binoculars"));
+		//If our character sees a different pickup then disable the glowing effect on the previous seen item
+		LastSeenEnemy->SetTempOutline(false);
+	}
 
-		MyController->ToggleBinocularsWidgetOn();
+	if (enemy)
+	{
+		EnemyTimer -= deltaseconds;
+		LastSeenEnemy = enemy;
+		enemy->SetTempOutline(true);
+		if (EnemyTimer <= 0)
+ 		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, FString::SanitizeFloat(EnemyTimer));
+			enemy->bIsSet = true;
+		}
+	}
+	else {
+		LastSeenEnemy = nullptr;
+		EnemyTimer = 3.0f;
+	}
+}
 
+void ARobberCharacterClass::BinocularsZoomIn()
+{
+	float zoomAmount = -500.0f;
+	bManualZoom = true;
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+	if (MyController)
+	{
+		if (MyController->bIsBinocularsOpen)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Zooming in"));
+			if (CameraBoom->TargetArmLength <= 4000.0f)
+			{
+				CameraBoom->TargetArmLength = CameraBoom->TargetArmLength + zoomAmount;
+			}
+		}
+	}
+}
 
+void ARobberCharacterClass::BinocularsZoomOut()
+{
+	float zoomAmount = 500.0f;
+	bManualZoom = true;
+	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+	if (MyController)
+	{
+		if (MyController->bIsBinocularsOpen)
+		{
+			// CameraBoom->TargetArmLength = (FMath::FInterpTo(CameraBoom->TargetArmLength, 0.0f, DeltaTime, 25.f));
+			if (CameraBoom->TargetArmLength >= 1000.0f)
+			{
+				CameraBoom->TargetArmLength = CameraBoom->TargetArmLength - zoomAmount;
+			}
+		}
 	}
 }
 

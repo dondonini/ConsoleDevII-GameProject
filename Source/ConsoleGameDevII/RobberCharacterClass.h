@@ -4,6 +4,7 @@
 
 #include "GameFramework/Character.h"
 #include "BasePickupClass.h"
+#include "EnemyAI.h"
 #include "RobberCharacterClass.generated.h"
 
 #define MAX_INVENTORY_SLOTS 2
@@ -80,6 +81,10 @@ private:
 	void RaycastItem();
 
 	ABasePickupClass* LastSeenItem;
+
+	AEnemyAI* LastSeenEnemy;
+
+	float EnemyTimer;
 public:
 	ABasePickupClass* EquippedItem;
 private:
@@ -99,9 +104,20 @@ private:
 
 	void ToggleItemFunctions();
 
+	void BinocularsRaycast(float deltaseconds);
+
+	void BinocularsZoomIn();
+
+	void BinocularsZoomOut();
+
+	bool bManualZoom;
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	float RaycastRange;
+
+	UPROPERTY(EditDefaultsOnly)
+	float BinocularsRaycastRange;
 
 	/* Player Movement */
 	UPROPERTY(EditDefaultsOnly, Category = Player)

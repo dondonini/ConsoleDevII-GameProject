@@ -23,6 +23,17 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	/*The Static Mesh of the pickup*/
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* EnemyMesh;
+
+	void SetTempOutline(bool Status);
+
+	void SetOutline(bool Status);
+
+public:
+	bool bIsSet;
+
 	
 	
 };
