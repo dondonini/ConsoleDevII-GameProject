@@ -332,10 +332,13 @@ void ARobberCharacterClass::PickupItem()
 void ARobberCharacterClass::NextItem()
 {
 	FString a = "Flashlight";
+	//this bool is to ensure our binoculars auto zoom in the first time its switched to
 	bManualZoom = false;
-	//add exception
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+	//before we switch index, we switch our item to hidden in game so the next time can be shown
 	Inventory[currentInventoryIndex]->SetActorHiddenInGame(true);
+	
+	/*Switching index to switch items*/
 	if (currentInventoryIndex == 1)
 	{
 		if (Inventory[0] != nullptr)
@@ -344,23 +347,31 @@ void ARobberCharacterClass::NextItem()
 	else if (Inventory[1] != nullptr)
 		currentInventoryIndex++;
 
+	/*if there is current index has an item*/
 	if (Inventory[currentInventoryIndex])
 	{
+		//Sets Equipped Item to current inventory slot
+		//Equipped item is so we can pull information like name and description of the item
 		EquippedItem = Inventory[currentInventoryIndex];
+		//Sets our UI to display name of equipped Item
 		MyController->SetNameOfInventoryWidget(EquippedItem->ItemName);
+		//Sets Equipped Item to show on screen
 		EquippedItem->SetActorHiddenInGame(false);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, EquippedItem->GetName() + TEXT("Blah"));
 	}
 
-	/*really hot fix.. there has to be a better way but lazy. jeff help*/
+	/*if current item is flashlight*/
 	if (Inventory[currentInventoryIndex]->ItemName == a)
 	{
 		AFlashlightClass* flashlight = Cast<AFlashlightClass>(EquippedItem);
 		if (flashlight)
 		{
+			/*the bool on flashlight is set to true, this is so we know we can toggle the flash light*/
+			/*there is a better fix but it will be implemented*/
 			flashlight->bIsActive = true;
 		}
 	}
+	/*if its not the current index, it sets it to false*/
+	/* i need to change the method because its searching all the current actors in the world right now*/
 	else
 	{
 		for (TActorIterator<AFlashlightClass> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -379,17 +390,22 @@ void ARobberCharacterClass::NextItem()
 
 void ARobberCharacterClass::ToggleItemFunctions()
 {
+	/*casting to equipped item*/
 	AFlashlightClass* flashlight = Cast<AFlashlightClass>(EquippedItem);
 	ABinocularsClass* binoculars = Cast<ABinocularsClass>(EquippedItem);
 	ALockpickClass* lockpick = Cast<ALockpickClass>(EquippedItem);
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
+
+	//exception handling
 	if (EquippedItem != nullptr)
 	{
+		//if current item is flashlight
 		if (EquippedItem == flashlight)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("flashlight"));
 			if (flashlight)
 			{
+				//toggles it if its true to false and vice versa
+				//bIsActive is called on blueprints to toggle the light
 				if (flashlight->bIsActive == true)
 				{
 					flashlight->bIsActive = false;
@@ -398,16 +414,19 @@ void ARobberCharacterClass::ToggleItemFunctions()
 					flashlight->bIsActive = true;
 			}
 		}
+		//if current item is binoculars
 		if (EquippedItem == binoculars)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, TEXT("Binoculars"));
-
+			//Turn on widget, the name of this funciton needs to be changed, it works as a toggle not just turning the widget on
+			//the widget is the UI with the black screen and transparent holes
 			MyController->ToggleBinocularsWidgetOn();
 			if (MyController->bIsBinocularsOpen)
 			{
+				//sets the item as hidden if we are in the zoomed in view and the widget is active
 				EquippedItem->SetActorHiddenInGame(true);
 			}
 			else
+				//sets the item as shwon
 				EquippedItem->SetActorHiddenInGame(false);
 		}
 	}
@@ -415,6 +434,7 @@ void ARobberCharacterClass::ToggleItemFunctions()
 
 void ARobberCharacterClass::BinocularsRaycast(float deltaseconds)
 {
+	//typical raycast
 	FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
 	FVector EndLocation = StartLocation + (FirstPersonCameraComponent->GetForwardVector() * BinocularsRaycastRange);
 
@@ -429,10 +449,9 @@ void ARobberCharacterClass::BinocularsRaycast(float deltaseconds)
 
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
 
-	//float timer = 3.0f;
 	if (LastSeenEnemy && LastSeenEnemy != enemy)
 	{
-		//If our character sees a different pickup then disable the glowing effect on the previous seen item
+		//If our character sees a different enemy then disable the glowing effect on the previous seen item
 		LastSeenEnemy->SetTempOutline(false);
 	}
 
@@ -452,6 +471,7 @@ void ARobberCharacterClass::BinocularsRaycast(float deltaseconds)
 		EnemyTimer = 3.0f;
 	}
 }
+
 
 void ARobberCharacterClass::BinocularsZoomIn()
 {
