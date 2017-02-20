@@ -3,16 +3,24 @@
 #pragma once
 
 #include "GameFramework/Character.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "EnemyAI.generated.h"
 
-UCLASS()
+UENUM()
+enum class EBotBehaviorType : uint8
+{
+	Passive,
+	Patrolling,
+};
+
+UCLASS(ABSTRACT)
 class CONSOLEGAMEDEVII_API AEnemyAI : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
-	AEnemyAI();
+	AEnemyAI(const class FObjectInitializer& ObjectInitializer);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -20,8 +28,14 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	/* Change default bot type during gameplay */
+	void SetBotType(EBotBehaviorType NewType);
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	class UBehaviorTree* BehaviorTree;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	EBotBehaviorType BotType;
 
 	/*The Static Mesh of the pickup*/
 	UPROPERTY(VisibleAnywhere)
@@ -33,6 +47,33 @@ public:
 
 public:
 	bool bIsSet;
+
+protected:
+	/*If the player is inside this box component he will be able to initiate a conversation with the pawn*/
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* BoxComp;
+
+	/*The audio component responsible for playing the dialog coming from this pawn*/
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* AudioComp;
+
+	UPROPERTY(VisibleAnywhere, Category = AI)
+	class UPawnSensingComponent* PawnSensingComp;
+
+	bool bSensedTarget;
+
+	float SenseTimeOut;
+
+	float LastSeenTime;
+
+	float LastHeardTime;
+
+	float SprintSpeedModifier;
+
+	float DefaultMaxSpeed;
+
+	UFUNCTION()
+	void OnSeePlayer(APawn* Pawn);
 
 	
 	

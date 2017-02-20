@@ -6,6 +6,8 @@ public class ConsoleGameDevII : ModuleRules
 {
 	public ConsoleGameDevII(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "Slate", "SlateCore", "HeadMountedDisplay" });
-	}
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "Slate", "SlateCore", "HeadMountedDisplay", "GameplayTasks", "AIModule" });
+
+        PrivateDependencyModuleNames.AddRange(new string[] { });
+    }
 }

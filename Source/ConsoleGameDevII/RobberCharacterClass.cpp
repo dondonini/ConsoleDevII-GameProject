@@ -307,7 +307,7 @@ void ARobberCharacterClass::PickupItem()
 					AFlashlightClass* aaaa = Cast<AFlashlightClass>(EquippedItem);
 					if (aaaa)
 					{
-						aaaa->bIsActive = true;
+					//	aaaa->bIsActive = true;
 					}
 				}
 			}
