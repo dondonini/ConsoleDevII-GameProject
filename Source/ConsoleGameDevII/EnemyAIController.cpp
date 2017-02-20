@@ -72,21 +72,36 @@ void AEnemyAIController::SearchForEnemy()
 			if (DistSq < BestDistSq)
 			{
 				BestDistSq = DistSq;
-				BestPawn = PlayerCharacter;
+				if (BestPawn->bHidden == false)
+					BestPawn = PlayerCharacter;
+				else
+					BestPawn = nullptr;
 			}
 		}
 	}
 	if (BestPawn)
 	{
-		SetEnemy(BestPawn);
+		if (BestPawn->bHidden == false)
+			SetEnemy(BestPawn);
 	}
 }
 
 void AEnemyAIController::SetEnemy(class APawn* Pawn)
 {
+	ARobberCharacterClass* character = Cast<ARobberCharacterClass>(Pawn);
+
+	if (BlackboardComponent)
+		BlackboardComponent->SetValueAsObject(TargetEnemyKeyName, nullptr);
+
 	if (BlackboardComponent)
 	{
-		BlackboardComponent->SetValueAsObject(TargetEnemyKeyName, Pawn);
+		if (character)
+		{
+			if (character->bHidden == false)
+				BlackboardComponent->SetValueAsObject(TargetEnemyKeyName, Pawn);
+			else
+				BlackboardComponent->SetValueAsObject(TargetEnemyKeyName, nullptr);
+		}
 	}
 }
 

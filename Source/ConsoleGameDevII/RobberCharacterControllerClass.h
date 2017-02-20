@@ -6,6 +6,7 @@
 #include "InventoryWidget.h"
 #include "BinocularsWidgetClass.h"
 #include "ConsoleGameDevIIHUD.h"
+#include "BoxWidgetClass.h"
 #include "RobberCharacterControllerClass.generated.h"
 
 /**
@@ -28,6 +29,8 @@ private:
 
 	UBinocularsWidgetClass* BinocularsWidgetRef;
 
+	UBoxWidgetClass* BoxWidgetRef;
+
 	/*True if the inventory is currently open - false otherwise*/
 	bool bIsInventoryOpen;
 
@@ -42,6 +45,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UBinocularsWidgetClass> BinocularsWidgetBP;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UBoxWidgetClass> BoxWidgetBP;
+
 
 public:
 	virtual void Possess(APawn* InPawn) override;
@@ -52,6 +58,9 @@ public:
 
 	void ToggleBinocularsWidgetOn();
 	void ToggleBinocularsWidgetOff();
+
+	void ToggleBoxWidgetOn();
+	void ToggleBoxWidgetOff();
 
 
 	void SetNameOfWidget(FString name);

@@ -30,20 +30,15 @@ void ARobberCharacterControllerClass::Possess(APawn* InPawn)
 	if (InventoryWidgetBP)
 	{
 		InventoryWidgetRef = CreateWidget<UInventoryWidget>(this, InventoryWidgetBP);
-
 		InventoryWidgetRef->Show();
-
 		ARobberCharacterClass* Char = Cast<ARobberCharacterClass>(GetPawn());
-
 		InventoryWidgetRef->ItemsArray = Char->GetInventory();
 	}
 
 	if (TooltipWidgetBP)
 	{
 		TooltipWidgetRef = CreateWidget<UTootlipWidgetClass>(this, TooltipWidgetBP);
-
 		TooltipWidgetRef->AddToViewport();
-
 		TooltipWidgetRef->ToggleOff();
 	}
 
@@ -52,6 +47,13 @@ void ARobberCharacterControllerClass::Possess(APawn* InPawn)
 		BinocularsWidgetRef = CreateWidget<UBinocularsWidgetClass>(this, BinocularsWidgetBP);
 		BinocularsWidgetRef->AddToViewport();
 		BinocularsWidgetRef->ToggleOff();
+	}
+	
+	if (BoxWidgetBP)
+	{
+		BoxWidgetRef = CreateWidget<UBoxWidgetClass>(this, BoxWidgetBP);
+		BoxWidgetRef->AddToViewport();
+		BoxWidgetRef->ToggleOff();
 	}
 
 }
@@ -103,6 +105,16 @@ void ARobberCharacterControllerClass::ToggleBinocularsWidgetOn()
 void ARobberCharacterControllerClass::ToggleBinocularsWidgetOff()
 {
 	BinocularsWidgetRef->ToggleOff();
+}
+
+void ARobberCharacterControllerClass::ToggleBoxWidgetOn()
+{
+	BoxWidgetRef->ToggleOn();
+}
+
+void ARobberCharacterControllerClass::ToggleBoxWidgetOff()
+{
+	BoxWidgetRef->ToggleOff();
 }
 
 

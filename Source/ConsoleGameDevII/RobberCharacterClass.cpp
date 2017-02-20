@@ -5,6 +5,7 @@
 #include "RobberCharacterControllerClass.h"
 #include "FlashlightClass.h"
 #include "BinocularsClass.h"
+#include "BoxClass.h"
 #include "LockpickClass.h"
 #include "EnemyAI.h"
 #include <EngineGlobals.h>
@@ -67,6 +68,8 @@ ARobberCharacterClass::ARobberCharacterClass()
 	currentInventoryIndex = 0;
 
 	EnemyTimer = 3.0f;
+
+	bHidden = false;
 }
 
 
@@ -332,6 +335,7 @@ void ARobberCharacterClass::PickupItem()
 void ARobberCharacterClass::NextItem()
 {
 	FString a = "Flashlight";
+	bHidden = false;
 	//this bool is to ensure our binoculars auto zoom in the first time its switched to
 	bManualZoom = false;
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
@@ -394,6 +398,7 @@ void ARobberCharacterClass::ToggleItemFunctions()
 	AFlashlightClass* flashlight = Cast<AFlashlightClass>(EquippedItem);
 	ABinocularsClass* binoculars = Cast<ABinocularsClass>(EquippedItem);
 	ALockpickClass* lockpick = Cast<ALockpickClass>(EquippedItem);
+	ABoxClass* box = Cast<ABoxClass>(EquippedItem);
 	ARobberCharacterControllerClass* MyController = Cast<ARobberCharacterControllerClass>(GetController());
 
 	//exception handling
@@ -428,6 +433,23 @@ void ARobberCharacterClass::ToggleItemFunctions()
 			else
 				//sets the item as shwon
 				EquippedItem->SetActorHiddenInGame(false);
+		}
+
+		if (EquippedItem == box)
+		{
+			if (bHidden == false)
+			{
+				MyController->ToggleBoxWidgetOn();
+				EquippedItem->SetActorHiddenInGame(true);
+				bHidden = true;
+			}
+			else
+			{
+				MyController->ToggleBoxWidgetOff();
+				EquippedItem->SetActorHiddenInGame(false);
+				bHidden = false;
+			}
+
 		}
 	}
 }

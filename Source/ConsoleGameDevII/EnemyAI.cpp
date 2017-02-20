@@ -116,10 +116,13 @@ void AEnemyAI::OnSeePlayer(APawn* Pawn)
 
 	AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController());
 	ARobberCharacterClass* SensedPawn = Cast<ARobberCharacterClass>(Pawn);
-	if (AIController)
+	if (SensedPawn->bHidden == false)
 	{
-		//Accesses the controller and casts the sensed pawn(player) into the enemy function of controller
-		AIController->SetEnemy(SensedPawn);
+		if (AIController)
+		{
+			//Accesses the controller and casts the sensed pawn(player) into the enemy function of controller
+			AIController->SetEnemy(SensedPawn);
+		}
 	}
 }
 

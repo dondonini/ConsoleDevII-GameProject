@@ -134,6 +134,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	float SpringArmLength;
+public:
+	bool bHidden;
 
 public:
 	/** Returns Mesh1P subobject **/
@@ -145,6 +147,8 @@ public:
 	TArray<ABasePickupClass*> GetInventory() { return Inventory; }
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	bool GetHidden() { return bHidden; }
 
 
 
