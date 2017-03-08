@@ -7,6 +7,8 @@
 #include "BinocularsWidgetClass.h"
 #include "ConsoleGameDevIIHUD.h"
 #include "BoxWidgetClass.h"
+#include "WastedWidgetClass.h"
+#include "WinWidgetClass.h"
 #include "RobberCharacterControllerClass.generated.h"
 
 /**
@@ -31,6 +33,10 @@ private:
 
 	UBoxWidgetClass* BoxWidgetRef;
 
+	UWastedWidgetClass* WastedWidgetRef;
+
+	UWinWidgetClass* WinWidgetRef;
+
 	/*True if the inventory is currently open - false otherwise*/
 	bool bIsInventoryOpen;
 
@@ -38,6 +44,10 @@ protected:
 	/*InventoryWidget Blueprint reference*/
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UInventoryWidget> InventoryWidgetBP;
+
+	/*InventoryWidget Blueprint reference*/
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UWinWidgetClass> WinWidgetBp;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UTootlipWidgetClass> TooltipWidgetBP;
@@ -47,6 +57,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UBoxWidgetClass> BoxWidgetBP;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UWastedWidgetClass> WastedWidgetBP;
 
 
 public:
@@ -61,6 +74,12 @@ public:
 
 	void ToggleBoxWidgetOn();
 	void ToggleBoxWidgetOff();
+
+	void ToggleWastedWidgetOn();
+	void ToggleWastedWidgetOff();
+
+	void ToggleWinWidgetOn();
+	void ToggleWinWidgetOff();
 
 
 	void SetNameOfWidget(FString name);

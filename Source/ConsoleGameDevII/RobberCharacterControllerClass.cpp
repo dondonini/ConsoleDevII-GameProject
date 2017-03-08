@@ -56,6 +56,20 @@ void ARobberCharacterControllerClass::Possess(APawn* InPawn)
 		BoxWidgetRef->ToggleOff();
 	}
 
+	if (WastedWidgetBP)
+	{
+		WastedWidgetRef = CreateWidget<UWastedWidgetClass>(this, WastedWidgetBP);
+		WastedWidgetRef->AddToViewport();
+		WastedWidgetRef->ToggleOff();
+	}
+
+	if (WinWidgetBp)
+	{
+		WinWidgetRef = CreateWidget<UWinWidgetClass>(this, WinWidgetBp);
+		WinWidgetRef->AddToViewport();
+		WinWidgetRef->ToggleOff();
+	}
+
 }
 
 void ARobberCharacterControllerClass::SetNameOfWidget(FString name)
@@ -115,6 +129,26 @@ void ARobberCharacterControllerClass::ToggleBoxWidgetOn()
 void ARobberCharacterControllerClass::ToggleBoxWidgetOff()
 {
 	BoxWidgetRef->ToggleOff();
+}
+
+void ARobberCharacterControllerClass::ToggleWastedWidgetOn()
+{
+	WastedWidgetRef->ToggleOn();
+}
+
+void ARobberCharacterControllerClass::ToggleWastedWidgetOff()
+{
+	WastedWidgetRef->ToggleOff();
+}
+
+void ARobberCharacterControllerClass::ToggleWinWidgetOff()
+{
+	WinWidgetRef->ToggleOff();
+}
+
+void ARobberCharacterControllerClass::ToggleWinWidgetOn()
+{
+	WinWidgetRef->ToggleOn();
 }
 
 

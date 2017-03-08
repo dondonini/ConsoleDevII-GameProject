@@ -3,9 +3,14 @@
 #include "ConsoleGameDevII.h"
 #include "EnemyAIController.h"
 #include "RobberCharacterClass.h"
+#include "RobberCharacterControllerClass.h"
+#include "ConsoleGameState.h"
+#include "Spawn.h"
 /* AI Include */
 #include "Perception/PawnSensingComponent.h"
 #include "EnemyAI.h"
+
+
 
 
 // Sets default values
@@ -47,11 +52,15 @@ void AEnemyAI::BeginPlay()
 {
 	Super::BeginPlay();
 
+	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AEnemyAI::OnBoxOverlap);
+
+
 	bIsSet = false;
 
 	if (PawnSensingComp)
 	{
 		PawnSensingComp->OnSeePawn.AddDynamic(this, &AEnemyAI::OnSeePlayer);
+		PawnSensingComp->OnHearNoise.AddDynamic(this, &AEnemyAI::OnHearNoise);
 	}
 	
 }
@@ -82,6 +91,11 @@ void AEnemyAI::Tick( float DeltaTime )
 	else
 	{
 		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
+	}
+
+	if (bSlowDown)
+	{
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2);
 	}
 }
 
@@ -125,4 +139,60 @@ void AEnemyAI::OnSeePlayer(APawn* Pawn)
 		}
 	}
 }
+
+void AEnemyAI::OnHearNoise(APawn* PawnInstigator, const FVector& Location, float Volume)
+{
+	bSensedTarget = true;
+	LastHeardTime = GetWorld()->GetTimeSeconds();
+
+	AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController());
+	if (AIController)
+	{
+		AIController->SetEnemy(PawnInstigator);
+	}
+}
+void AEnemyAI::OnBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//UGameplayStatics::SetGamePaused(GetWorld(), true);
+
+	ARobberCharacterControllerClass* pc = Cast<ARobberCharacterControllerClass>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (pc)
+	{
+		if (bSensedTarget)
+		{
+			bSlowDown = true;
+			pc->ToggleWastedWidgetOn();
+			FTimerHandle nothing;
+			GetWorldTimerManager().SetTimer(nothing, this, &AEnemyAI::ToggleTimer, 2.0f, false);
+			/* run a timer here and reset everything*/
+		}
+	}
+
+}
+
+void AEnemyAI::ToggleTimer()
+{
+	ARobberCharacterControllerClass* pc = Cast<ARobberCharacterControllerClass>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (pc)
+	{
+		ARobberCharacterClass* character = Cast<ARobberCharacterClass>(pc->GetPawn());
+		if (character)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("accessed character"));
+			character->Reset();		
+		}
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("RSpawning"));
+		bSlowDown = false;
+
+		ARobberCharacterControllerClass* pc = Cast<ARobberCharacterControllerClass>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+		if (pc)
+			pc->ToggleWastedWidgetOff();
+
+
+	}
+
+
+}
+
+
 

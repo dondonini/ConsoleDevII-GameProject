@@ -3,11 +3,14 @@
 #include "ConsoleGameDevII.h"
 #include "RobberCharacterClass.h"
 #include "RobberCharacterControllerClass.h"
+#include "HomeBaseClass.h"
 #include "FlashlightClass.h"
 #include "BinocularsClass.h"
+#include "ObjectiveActor.h"
 #include "BoxClass.h"
 #include "LockpickClass.h"
 #include "EnemyAI.h"
+#include "Spawn.h"
 #include <EngineGlobals.h>
 #include <Runtime/Engine/Classes/Engine/Engine.h>
 
@@ -29,6 +32,9 @@ ARobberCharacterClass::ARobberCharacterClass()
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
+	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
+	BoxComp->AttachTo(RootComponent);
+
 	//Cameraboom
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetCapsuleComponent());
@@ -42,18 +48,7 @@ ARobberCharacterClass::ARobberCharacterClass()
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = false;
 
-	/*
-	// Camera Shake
-	FirstPersonCameraShake = UCameraShake::StaticClass()->GetDefaultObject<UCameraShake>();
-	FirstPersonCameraShake->OscillationDuration = -1.0f; //negative value will run forever
-	FirstPersonCameraShake->RotOscillation.Pitch.Amplitude = 1.0f;
-	FirstPersonCameraShake->RotOscillation.Pitch.Frequency = 0.5f;
-	FirstPersonCameraShake->RotOscillation.Pitch.InitialOffset = EInitialOscillatorOffset::EOO_OffsetRandom;
 
-	FirstPersonCameraShake->RotOscillation.Yaw.Amplitude = 1.0f;
-	FirstPersonCameraShake->RotOscillation.Yaw.Frequency = 0.5f;
-	FirstPersonCameraShake->RotOscillation.Yaw.InitialOffset = EInitialOscillatorOffset::EOO_OffsetRandom;
-	*/
 
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh1P"));
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
@@ -79,6 +74,8 @@ void ARobberCharacterClass::BeginPlay()
 	Super::BeginPlay();
 
 	LastSeenItem = nullptr;
+
+	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &ARobberCharacterClass::OnBoxOverlap);
 
 	ARobberCharacterControllerClass* controller = Cast<ARobberCharacterControllerClass>(GetController());
 	if (controller)
@@ -276,6 +273,10 @@ void ARobberCharacterClass::RaycastForward()
 
 void ARobberCharacterClass::PickupItem()
 {
+	AObjectiveActor* objective = Cast<AObjectiveActor>(LastSeenItem);
+	AObjectiveActor* objectivee = Cast<AObjectiveActor>(EquippedItem);
+
+
 	//so if we are looking at an item 
 	if (LastSeenItem && EquippedItem != LastSeenItem)
 	{
@@ -346,6 +347,11 @@ void ARobberCharacterClass::NextItem()
 	if (currentInventoryIndex == 1)
 	{
 		if (Inventory[0] != nullptr)
+			currentInventoryIndex++;
+	}
+	else if (currentInventoryIndex == 2)
+	{
+		if (Inventory[2] != nullptr)
 			currentInventoryIndex = 0;
 	}
 	else if (Inventory[1] != nullptr)
@@ -374,6 +380,14 @@ void ARobberCharacterClass::NextItem()
 			flashlight->bIsActive = true;
 		}
 	}
+
+	if (Inventory[currentInventoryIndex]->ItemName == "Objective")
+	{
+
+		bHasObjective = true;
+		
+	}
+
 	/*if its not the current index, it sets it to false*/
 	/* i need to change the method because its searching all the current actors in the world right now*/
 	else
@@ -390,6 +404,7 @@ void ARobberCharacterClass::NextItem()
 	{
 		MyController->ToggleBinocularsWidgetOn();
 	}
+
 }
 
 void ARobberCharacterClass::ToggleItemFunctions()
@@ -490,7 +505,7 @@ void ARobberCharacterClass::BinocularsRaycast(float deltaseconds)
 	}
 	else {
 		LastSeenEnemy = nullptr;
-		EnemyTimer = 3.0f;
+		EnemyTimer = 1.5f;
 	}
 }
 
@@ -529,6 +544,63 @@ void ARobberCharacterClass::BinocularsZoomOut()
 			}
 		}
 	}
+}
+
+void ARobberCharacterClass::Reset()
+{
+	ARobberCharacterControllerClass* pc = Cast<ARobberCharacterControllerClass>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	for (TActorIterator<ASpawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+		ASpawn *Mesh = *ActorItr;
+
+		this->SetActorLocation(Mesh->GetActorLocation());
+		bHasObjective = false;
+		
+	}
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+	if (pc)
+	{
+		pc->ToggleWastedWidgetOff();
+		pc->ToggleWinWidgetOff();
+
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+
+		Inventory.Empty();
+
+		if (EquippedItem != nullptr)
+		{
+			EquippedItem->Destroy(true);
+		}
+		EquippedItem = nullptr;
+
+		
+	}
+}
+
+void ARobberCharacterClass::OnBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (bHasObjective)
+	{
+		AHomeBaseClass* base = Cast<AHomeBaseClass>(OtherActor);
+		if (OtherActor == base)
+		{
+			bHasObjective = false;
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
+
+			ARobberCharacterControllerClass* pc = Cast<ARobberCharacterControllerClass>(GetController());
+			if (pc)
+			{
+				pc->ToggleWinWidgetOn();
+
+				FTimerHandle nothing;
+				GetWorldTimerManager().SetTimer(nothing, this, &ARobberCharacterClass::Reset, 2.0f, false);
+			}
+
+		}
+
+	}
+
 }
 
 

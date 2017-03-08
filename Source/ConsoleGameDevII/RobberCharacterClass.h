@@ -7,13 +7,19 @@
 #include "EnemyAI.h"
 #include "RobberCharacterClass.generated.h"
 
-#define MAX_INVENTORY_SLOTS 2
+#define MAX_INVENTORY_SLOTS 3
 #define DEFAULT_MAX_SPEED 500
 
 UCLASS()
 class CONSOLEGAMEDEVII_API ARobberCharacterClass : public ACharacter
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* BoxComp;
+
+	UFUNCTION()
+	void OnBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -74,6 +80,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	bool bHasObjective;
+
+	void Reset();
+
 
 private:
 	void RaycastForward();

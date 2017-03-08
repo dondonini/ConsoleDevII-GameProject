@@ -75,6 +75,17 @@ protected:
 	UFUNCTION()
 	void OnSeePlayer(APawn* Pawn);
 
+	UFUNCTION()
+	void OnHearNoise(APawn* PawnInstigator, const FVector& Location, float Volume);
+
+	bool bSlowDown;
+
+	void ToggleTimer();
+private:
+	UFUNCTION()
+	void OnBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+
 	
 	
 };
