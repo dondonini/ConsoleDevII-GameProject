@@ -331,6 +331,8 @@ void ARobberCharacterClass::PickupItem()
 			//Add noise effects for cant pick up more item
 		}
 	}
+
+	InventoryFullEvent();
 }
 
 void ARobberCharacterClass::NextItem()
@@ -603,4 +605,15 @@ void ARobberCharacterClass::OnBoxOverlap(UPrimitiveComponent* OverlappedComp, AA
 
 }
 
+
+bool ARobberCharacterClass::isInventoryFull()
+{
+	int32 AvailableSlots = Inventory.Find(nullptr);
+
+	if (AvailableSlots == INDEX_NONE)
+	{
+		return true;
+	}
+	return false;
+}
 

@@ -7,7 +7,7 @@
 #include "EnemyAI.h"
 #include "RobberCharacterClass.generated.h"
 
-#define MAX_INVENTORY_SLOTS 3
+#define MAX_INVENTORY_SLOTS 2
 #define DEFAULT_MAX_SPEED 500
 
 UCLASS()
@@ -98,7 +98,7 @@ private:
 	float EnemyTimer;
 public:
 	ABasePickupClass* EquippedItem;
-private:
+public:
 
 	UFUNCTION()
 	void PickupItem();
@@ -148,6 +148,9 @@ protected:
 public:
 	bool bHidden;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void InventoryFullEvent();
+
 public:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -160,6 +163,11 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	bool GetHidden() { return bHidden; }
+
+	UFUNCTION(BlueprintCallable)
+	bool isInventoryFull();
+
+
 
 
 
